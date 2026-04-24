@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PPT Master Web UI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <aside class="intro-panel">
+      <div class="intro-badge">Local workflow</div>
+      <h1>PPT Master<br>Web UI</h1>
+      <p class="intro-copy">把“上传内容 + 直接生成成品”的这层界面补上。现在同一份草稿既能导出可编辑 PPTX，也能导出单文件 Web Deck。</p>
+      <div class="intro-grid">
+        <div class="intro-card">
+          <span>01</span>
+          <strong>上传素材</strong>
+          <p>支持 PDF、DOCX、Markdown、TXT、PPTX、HTML 等本地文件。</p>
+        </div>
+        <div class="intro-card">
+          <span>02</span>
+          <strong>先出草稿</strong>
+          <p>先看草稿、再改标题与顺序，避免一上来就导出成品。</p>
+        </div>
+        <div class="intro-card">
+          <span>03</span>
+          <strong>双输出</strong>
+          <p>可编辑 PPTX 保留原链路，Web Deck 则适合直接浏览器播放。</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workbench">
+      <section class="panel form-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Create</p>
+            <h2>生成设置</h2>
+          </div>
+          <button id="generateBtn" class="primary-btn">生成草稿</button>
+        </div>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>PPT 标题</span>
+            <input id="deckTitle" type="text" placeholder="例如：2026 年产品路线图">
+          </label>
+
+          <label class="field">
+            <span>页数</span>
+            <input id="pageCount" type="number" min="4" max="12" value="6">
+          </label>
+
+          <label class="field">
+            <span>视觉风格</span>
+            <select id="styleKey">
+              <option value="business">商务汇报</option>
+              <option value="tech">科技产品</option>
+              <option value="academic">学术研究</option>
+              <option value="guizang">归藏杂志风</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>导出模式</span>
+            <select id="exportMode">
+              <option value="pptx">只导出 PPTX</option>
+              <option value="web">只导出 Web Deck</option>
+              <option value="both">PPTX + Web Deck</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>规划器</span>
+            <select id="planner">
+              <option value="heuristic">Heuristic（本地，无需 API）</option>
+              <option value="openai">OpenAI-compatible</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>语言</span>
+            <select id="language">
+              <option value="auto">自动</option>
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>模型名</span>
+            <input id="model" type="text" placeholder="gpt-4.1-mini">
+          </label>
+
+          <label class="field field-span-2">
+            <span>OpenAI Base URL</span>
+            <input id="baseUrl" type="text" placeholder="可选，例如 https://api.openai.com/v1">
+          </label>
+
+          <label class="field field-span-2">
+            <span>API Key</span>
+            <input id="apiKey" type="password" placeholder="仅本次请求使用，不写入仓库">
+          </label>
+        </div>
+
+        <div class="template-picker">
+          <div class="template-picker-head">
+            <p>模板预设</p>
+            <small>这里不只是换配色，而是给草稿更明确的版式和节奏。</small>
+          </div>
+          <div id="templateCards" class="template-cards">
+            <button class="template-card active" type="button" data-style="business">
+              <div class="template-art business-art"></div>
+              <strong>商务汇报</strong>
+              <p>结构稳定，适合管理汇报与正式材料。</p>
+            </button>
+            <button class="template-card" type="button" data-style="tech">
+              <div class="template-art tech-art"></div>
+              <strong>科技产品</strong>
+              <p>更适合产品发布、方案演示和技术能力说明。</p>
+            </button>
+            <button class="template-card" type="button" data-style="academic">
+              <div class="template-art academic-art"></div>
+              <strong>学术研究</strong>
+              <p>适合研究汇报、方法论说明和论文答辩。</p>
+            </button>
+            <button class="template-card" type="button" data-style="guizang">
+              <div class="template-art guizang-art"></div>
+              <strong>归藏杂志风</strong>
+              <p>借鉴 guizang-ppt-skill 的章节页、引语页和杂志感排版。</p>
+            </button>
+          </div>
+        </div>
+
+        <div class="input-stack">
+          <div class="field uploader">
+            <span>上传文件</span>
+            <label id="dropzone" class="dropzone">
+              <input id="fileInput" type="file" accept=".pdf,.doc,.docx,.md,.markdown,.txt,.ppt,.pptx,.html,.htm,.epub,.rtf,.odt">
+              <div class="dropzone-copy">
+                <strong>把文件拖到这里</strong>
+                <p>或者点击选择 PDF、DOCX、Markdown、PPTX 等文件</p>
+              </div>
+            </label>
+            <small id="fileMeta">还没有选择文件</small>
+          </div>
+
+          <label class="field">
+            <span>或者粘贴文本</span>
+            <textarea id="sourceText" rows="10" placeholder="把文档内容直接贴在这里也可以。"></textarea>
+          </label>
+
+          <label class="field">
+            <span>或者给一个 URL</span>
+            <input id="sourceUrl" type="text" placeholder="https://example.com/article">
+          </label>
+        </div>
+      </section>
+
+      <section class="panel status-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Status</p>
+            <h2>运行状态</h2>
+          </div>
+          <div id="statusPill" class="status-pill idle">待命</div>
+        </div>
+
+        <div class="progress-shell">
+          <div class="progress-meta">
+            <strong id="stageLabel">等待开始</strong>
+            <span id="progressText">0%</span>
+          </div>
+          <div class="progress-track">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+        </div>
+
+        <div class="result-grid">
+          <div class="result-card">
+            <span>原生 PPTX</span>
+            <a id="nativeLink" class="file-link disabled" href="#" target="_blank" rel="noreferrer">尚未生成</a>
+          </div>
+          <div class="result-card">
+            <span>SVG 参考版</span>
+            <a id="legacyLink" class="file-link disabled" href="#" target="_blank" rel="noreferrer">尚未生成</a>
+          </div>
+          <div class="result-card">
+            <span>Web Deck</span>
+            <a id="webDeckLink" class="file-link disabled" href="#" target="_blank" rel="noreferrer">尚未生成</a>
+          </div>
+          <div class="result-card wide">
+            <span>项目目录</span>
+            <div id="projectDir" class="mono-text">-</div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="refreshDraftBtn" class="ghost-btn" type="button" disabled>重渲染草稿</button>
+          <button id="exportBtn" class="primary-btn secondary-size" type="button" disabled>导出成品</button>
+          <button id="retryExportBtn" class="ghost-btn" type="button" disabled>重试导出</button>
+          <button id="openProjectBtn" class="ghost-btn" type="button" disabled>打开项目目录</button>
+          <button id="openExportsBtn" class="ghost-btn" type="button" disabled>打开导出目录</button>
+        </div>
+
+        <div class="editor-shell">
+          <div class="preview-head">
+            <p>导出前编辑</p>
+            <small>可以调整总标题、副标题和页面顺序，然后再导出。</small>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span>Deck Title</span>
+              <input id="editorDeckTitle" type="text" placeholder="导出前可修改总标题">
+            </label>
+            <label class="field">
+              <span>Deck Subtitle</span>
+              <input id="editorDeckSubtitle" type="text" placeholder="导出前可修改副标题">
+            </label>
+          </div>
+          <div id="slideEditorList" class="slide-editor-list">
+            <div class="preview-empty">生成草稿后，这里可以调整页面顺序和标题。</div>
+          </div>
+        </div>
+
+        <div class="preview-shell">
+          <div class="preview-head">
+            <p>SVG 预览</p>
+            <small>支持翻页预览和缩略图切换</small>
+          </div>
+          <div id="previewStage" class="preview-stage is-empty">
+            <button id="prevSlideBtn" class="nav-btn" type="button" disabled>上一页</button>
+            <div class="preview-frame-shell">
+              <div id="previewEmpty" class="preview-empty">这里会显示生成后的页面预览。</div>
+              <iframe id="previewFrame" class="preview-frame" title="Slide Preview"></iframe>
+            </div>
+            <button id="nextSlideBtn" class="nav-btn" type="button" disabled>下一页</button>
+          </div>
+          <div class="preview-meta">
+            <strong id="previewCounter">0 / 0</strong>
+            <span id="previewCaption">尚未生成页面</span>
+          </div>
+          <div id="previewThumbs" class="preview-thumbs">
+            <div class="preview-empty compact">生成完成后，这里会显示缩略图。</div>
+          </div>
+        </div>
+
+        <div class="log-shell">
+          <div class="preview-head">
+            <p>运行日志</p>
+            <small>后端脚本输出会实时显示在这里</small>
+          </div>
+          <pre id="logOutput" class="log-output">准备就绪。</pre>
+        </div>
+      </section>
+
+      <section class="panel history-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">History</p>
+            <h2>生成历史</h2>
+          </div>
+          <button id="refreshHistoryBtn" class="ghost-btn" type="button">刷新列表</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <div class="preview-empty">这里会显示最近生成的项目。</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
